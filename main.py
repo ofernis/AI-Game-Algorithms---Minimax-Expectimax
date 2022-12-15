@@ -5,7 +5,7 @@ if __name__ == '__main__':
 
     # PART1
     game.play_game("human", "human")
-
+    xXOferKingXx
     # PART2
     # game.play_tournament("greedy", "random", 50)
     # game.play_tournament("greedy_improved", "random", 50)
