@@ -95,7 +95,15 @@ def greedy(curr_state, agent_id, time_limit):
 
 # TODO - add your code here
 def greedy_improved(curr_state, agent_id, time_limit):
-    raise NotImplementedError()
+    neighbor_list = curr_state.get_neighbors()
+    max_heuristic = 0
+    max_neighbor = None
+    for neighbor in neighbor_list:
+        curr_heuristic = smart_heuristic(neighbor[1], agent_id)
+        if curr_heuristic >= max_heuristic:
+            max_heuristic = curr_heuristic
+            max_neighbor = neighbor
+    return max_neighbor[0]
 
 
 def rb_heuristic_min_max(curr_state, agent_id, time_limit):
