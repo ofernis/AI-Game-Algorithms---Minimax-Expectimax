@@ -4,7 +4,7 @@ if __name__ == '__main__':
     print("YAY LET'S START RUNNING STUFF")
 
     # PART1
-    # game.play_game("human", "human")
+    game.play_game("human", "human")
 
     # PART2
     # game.play_tournament("greedy", "random", 50)
