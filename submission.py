@@ -53,9 +53,15 @@ def dumb_heuristic2(state, agent_id):
                 sum_pawns += 1
 
     return sum_pawns
+def check_double(state, agent_id):
+    count=0
+
+
 
 
 def smart_heuristic(state, agent_id):
+    substraction= dumb_heuristic2(state,agent_id)-dumb_heuristic2(state,1-agent_id)
+
     return
 
 
