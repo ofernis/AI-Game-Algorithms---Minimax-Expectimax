@@ -58,9 +58,36 @@ def check_double(state, agent_id):
 
 
 
+# a utility function
+def num_of_two_self_pawns_in_row_col_diag(state, agent_id):
+    counter = 0
+    arr = gge.pawn_list_to_marks_array(state)
+    agent_id = str(agent_id + 1)
+    # check rows
+    for i in range(3):
+        if (arr[i][0] == agent_id and (arr[i][0] == arr[i][1] or arr[i][0] == arr[i][2])) or\
+                (arr[i][1] == agent_id and arr[i][1] == arr[i][2]):
+            counter += 1
+    # check columns
+    for i in range(3):
+        if (arr[0][i] == agent_id and (arr[0][i] == arr[1][i] or arr[0][i] == arr[2][i])) or \
+                (arr[1][i] == agent_id and arr[1][i] == arr[2][i]):
+            counter += 1
+    # check obliques
+    if (arr[0][0] == agent_id and ([0][0] == arr[1][1] or arr[2][2] == arr[1][1])) or\
+            (arr[1][1] == agent_id and arr[1][1] == arr[2][2]):
+        counter += 1
+
+    if arr[0][2] == (agent_id and (arr[0][2] == arr[1][1] or arr[2][0] == arr[2][0])) or \
+            (arr[1][1] == agent_id and arr[1][1] == arr[2][0]):
+        counter += 1
+
+    return counter
+
+
 
 def smart_heuristic(state, agent_id):
-    substraction= dumb_heuristic2(state,agent_id)-dumb_heuristic2(state,1-agent_id)
+    substraction = dumb_heuristic2(state, agent_id) - dumb_heuristic2(state, 1 - agent_id) + num_of_two_self_pawns_in_row_col_diag(state, agent_id)
 
     return
 
