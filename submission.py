@@ -53,12 +53,22 @@ def dumb_heuristic2(state, agent_id):
                 sum_pawns += 1
 
     return sum_pawns
-def check_double(state, agent_id):
-    count=0
 
 
 
-# a utility function
+def win_lose(state, agent_id):
+    final = gge.is_final_state(state)
+    sum_heu = 0
+    if final is not None:
+        if final == 0:
+            sum_heu = -50
+        if final == agent_id+1:
+            sum_heu = 100
+        if final == (1-agent_id)+1:
+            sum_heu = -100
+        return sum_heu
+    return 0
+
 def num_of_two_self_pawns_in_row_col_diag(state, agent_id):
     counter = 0
     arr = gge.pawn_list_to_marks_array(state)
@@ -85,11 +95,9 @@ def num_of_two_self_pawns_in_row_col_diag(state, agent_id):
     return counter
 
 
-
 def smart_heuristic(state, agent_id):
-    substraction = dumb_heuristic2(state, agent_id) - dumb_heuristic2(state, 1 - agent_id) + num_of_two_self_pawns_in_row_col_diag(state, agent_id)
-
-    return
+    return win_lose(state, agent_id) + dumb_heuristic2(state, agent_id) - dumb_heuristic2(state, 1 - agent_id)\
+         + num_of_two_self_pawns_in_row_col_diag(state, agent_id) - num_of_two_self_pawns_in_row_col_diag(state, 1 - agent_id)
 
 
 # IMPLEMENTED FOR YOU - NO NEED TO CHANGE
