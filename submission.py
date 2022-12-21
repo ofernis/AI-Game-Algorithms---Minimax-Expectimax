@@ -19,7 +19,7 @@ def dumb_heuristic1(state, agent_id):
     # now convert to our numbers the win
     winner = int(is_final) - 1
     # now winner is 0 if first player won and 1 if second player won
-    # and remember that agent_id is 0 if we are first player  and 1 if we are second player won
+    # and remember that agent_id is 0 if we are first player and 1 if we are second player won
     if winner == agent_id:
         # if we won
         return 1
@@ -55,19 +55,19 @@ def dumb_heuristic2(state, agent_id):
     return sum_pawns
 
 
-
 def win_lose(state, agent_id):
     final = gge.is_final_state(state)
     sum_heu = 0
     if final is not None:
-        if final == 0:
-            sum_heu = -50
-        if final == agent_id+1:
+        if int(final) == 0:
+            sum_heu = 50
+        if int(final) == (agent_id + 1):
             sum_heu = 100
-        if final == (1-agent_id)+1:
-            sum_heu = -100
+        if int(final) == ((1 - agent_id) + 1):
+            sum_heu = 0
         return sum_heu
     return 0
+
 
 def num_of_two_self_pawns_in_row_col_diag(state, agent_id):
     counter = 0
@@ -95,9 +95,15 @@ def num_of_two_self_pawns_in_row_col_diag(state, agent_id):
     return counter
 
 
+def maximum(a, b):
+    return a if a >= b else b
+
+
 def smart_heuristic(state, agent_id):
-    return win_lose(state, agent_id) + dumb_heuristic2(state, agent_id) - dumb_heuristic2(state, 1 - agent_id)\
-         + num_of_two_self_pawns_in_row_col_diag(state, agent_id) - num_of_two_self_pawns_in_row_col_diag(state, 1 - agent_id)
+    # print("num of 2's:", num_of_two_self_pawns_in_row_col_diag(state, agent_id))
+
+    return win_lose(state, agent_id) + (dumb_heuristic2(state, agent_id) / maximum(dumb_heuristic2(state, 1 - agent_id), 1)) \
+         + (num_of_two_self_pawns_in_row_col_diag(state, agent_id) / maximum(num_of_two_self_pawns_in_row_col_diag(state, 1 - agent_id), 1))
 
 
 # IMPLEMENTED FOR YOU - NO NEED TO CHANGE
