@@ -4,6 +4,8 @@ import numpy as np
 
 import Gobblet_Gobblers_Env as gge
 
+import time
+
 not_on_board = np.array([-1, -1])
 
 
@@ -19,7 +21,7 @@ def dumb_heuristic1(state, agent_id):
     # now convert to our numbers the win
     winner = int(is_final) - 1
     # now winner is 0 if first player won and 1 if second player won
-    # and remember that agent_id is 0 if we are first player and 1 if we are second player won
+    # and remember that agent_id is 0 if we are first player  and 1 if we are second player won
     if winner == agent_id:
         # if we won
         return 1
@@ -55,19 +57,19 @@ def dumb_heuristic2(state, agent_id):
     return sum_pawns
 
 
+
 def win_lose(state, agent_id):
     final = gge.is_final_state(state)
     sum_heu = 0
     if final is not None:
         if int(final) == 0:
-            sum_heu = 50
-        if int(final) == (agent_id + 1):
-            sum_heu = 100
-        if int(final) == ((1 - agent_id) + 1):
-            sum_heu = 0
+            sum_heu = -50
+        if int(final) == int(agent_id)+1:
+            sum_heu = 1000
+        if int(final) == (1-int(agent_id))+1:
+            sum_heu = -1000
         return sum_heu
     return 0
-
 
 def num_of_two_self_pawns_in_row_col_diag(state, agent_id):
     counter = 0
@@ -91,19 +93,15 @@ def num_of_two_self_pawns_in_row_col_diag(state, agent_id):
     if arr[0][2] == (agent_id and (arr[0][2] == arr[1][1] or arr[2][0] == arr[2][0])) or \
             (arr[1][1] == agent_id and arr[1][1] == arr[2][0]):
         counter += 1
-
     return counter
 
 
-def maximum(a, b):
-    return a if a >= b else b
-
-
 def smart_heuristic(state, agent_id):
-    # print("num of 2's:", num_of_two_self_pawns_in_row_col_diag(state, agent_id))
+    if gge.is_final_state(state) is not None:
+        return win_lose(state, agent_id)
+    return (dumb_heuristic2(state, agent_id) - dumb_heuristic2(state, 1 - agent_id)) + \
+        num_of_two_self_pawns_in_row_col_diag(state, agent_id) - num_of_two_self_pawns_in_row_col_diag(state, 1 - agent_id)
 
-    return win_lose(state, agent_id) + (dumb_heuristic2(state, agent_id) / maximum(dumb_heuristic2(state, 1 - agent_id), 1)) \
-         + (num_of_two_self_pawns_in_row_col_diag(state, agent_id) / maximum(num_of_two_self_pawns_in_row_col_diag(state, 1 - agent_id), 1))
 
 
 # IMPLEMENTED FOR YOU - NO NEED TO CHANGE
@@ -143,7 +141,7 @@ def greedy(curr_state, agent_id, time_limit):
 # TODO - add your code here
 def greedy_improved(curr_state, agent_id, time_limit):
     neighbor_list = curr_state.get_neighbors()
-    max_heuristic = 0
+    max_heuristic = float('-inf')
     max_neighbor = None
     for neighbor in neighbor_list:
         curr_heuristic = smart_heuristic(neighbor[1], agent_id)
@@ -153,16 +151,187 @@ def greedy_improved(curr_state, agent_id, time_limit):
     return max_neighbor[0]
 
 
+def rb_heuristic_min_max_d(time_limit, start_time, curr_state, agent_id, d, action=None):
+    print('DDDDDDDDDEPTH:',d, 'TIME:', time.time() - start_time)
+    if time.time() - start_time > time_limit - 0.2:
+        return (None, None, True)
+    elif gge.is_final_state(curr_state) or (d == 0):
+        return (action, smart_heuristic(curr_state, agent_id) + d, False)
+    turn = curr_state.turn
+    children = curr_state.get_neighbors()
+    if turn == agent_id:
+        max_action = None
+        cur_max = float('-inf')
+        for c in children:
+            v = rb_heuristic_min_max_d(time_limit, start_time, c[1], agent_id, d-1, c[0])
+            if time.time() - start_time > time_limit - 0.2:
+                return (None, None, True)
+            if v[1] > cur_max:
+                cur_max = v[1]
+                max_action = c[0]
+        return (max_action, cur_max, False)
+    elif turn == 1 - agent_id:
+        min_action = None
+        cur_min = float('inf')
+        for c in children:
+            v = rb_heuristic_min_max_d(time_limit, start_time, c[1], agent_id, d - 1, c[0])
+            if time.time() - start_time > time_limit - 0.2:
+                return (None, None, True)
+            if v[1] < cur_min:
+                cur_min = v[1]
+                min_action = c[0]
+        return (min_action, cur_min, False)
+
+
 def rb_heuristic_min_max(curr_state, agent_id, time_limit):
-    raise NotImplementedError()
+    start_time = time.time()
+    depth = 1
+    current_sol = None
+
+    while True:
+        prev_sol = rb_heuristic_min_max_d(time_limit, start_time, curr_state, agent_id, depth)
+        is_time_ended = prev_sol[2]
+        if is_time_ended:
+            break
+        current_sol = prev_sol[0]
+        depth += 1
+    return current_sol
+
+
+def alpha_beta_d(time_limit, start_time, curr_state, agent_id, d,alpha,beta,action=None):
+    print('DDDDDDDDDEPTH:', d, 'TIME:', time.time() - start_time)
+    if time.time() - start_time > time_limit - 0.2:
+        return (None, None, True)
+    elif gge.is_final_state(curr_state) or (d == 0):
+        return (action, smart_heuristic(curr_state, agent_id) + d, False)
+    turn = curr_state.turn
+    max_action = None
+    children = curr_state.get_neighbors()
+    if turn == agent_id:
+        cur_max = float('-inf')
+        for c in children:
+            v = alpha_beta_d(time_limit, start_time, c[1], agent_id, d-1, alpha, beta, c[0])
+            if time.time() - start_time > time_limit - 0.2:
+                return (None, None, True)
+            if v[1] > cur_max:
+                cur_max = v[1]
+                max_action = c[0]
+            alpha = max(cur_max, alpha)
+            if cur_max >= beta:
+                return (max_action, float('inf'), False)
+        return (max_action, cur_max, False)
+    elif turn == 1 - agent_id:
+        min_action = None
+        cur_min = float('inf')
+        for c in children:
+            v = alpha_beta_d(time_limit, start_time, c[1], agent_id, d-1, alpha, beta, c[0])
+            if time.time() - start_time > time_limit - 0.2:
+                return (None, None, True)
+            if v[1] < cur_min:
+                cur_min = v[1]
+                min_action = c[0]
+            beta = min(cur_min, beta)
+            if cur_min <= alpha:
+                return (min_action, float('-inf'), False)
+        return (min_action, cur_min, False)
 
 
 def alpha_beta(curr_state, agent_id, time_limit):
-    raise NotImplementedError()
+    start_time = time.time()
+    depth = 1
+    current_sol = None
+
+    while True:
+        prev_sol = alpha_beta_d(time_limit, start_time, curr_state, agent_id, depth, float('-inf'), float('inf'))
+        is_time_ended = prev_sol[2]
+        if is_time_ended:
+            break
+        current_sol = prev_sol[0]
+        depth += 1
+
+    return current_sol
+
+
+def expectimax_d(time_limit, start_time, curr_state, agent_id, d, action=None):
+    print('DDDDDDDDDEPTH:', d, 'TIME:', time.time() - start_time)
+    if time.time() - start_time > time_limit - 0.2:
+        return (None, None, True)
+    elif gge.is_final_state(curr_state) or (d == 0):
+        return (action, smart_heuristic(curr_state, agent_id) + d, False)
+
+    turn = curr_state.turn
+    children = curr_state.get_neighbors()
+    if turn == agent_id:
+        max_action = None
+        cur_max = float('-inf')
+        for c in children:
+            v = expectimax_d(time_limit, start_time, c[1], agent_id, d-1, c[0])
+            if time.time() - start_time > time_limit - 0.2:
+                return (None, None, True)
+            if v[1] > cur_max:
+                cur_max = v[1]
+                max_action = c[0]
+        return (max_action, cur_max, False)
+
+    elif turn == 1 - agent_id:
+        exp_sum = 0
+        small_action = 0
+        eat_action = 0
+        min_action = action
+        cur_min = float('inf')
+        special_child_arr = []
+        for i, c in enumerate(children):
+            if time.time() - start_time > time_limit - 0.2:
+                return (None, None, True)
+            if c[0][0] == "S1" or c[0][0] == "S2":
+                small_action = small_action + 1
+                special_child_arr.append(i)
+                continue
+            for pawn in curr_state.player2_pawns:
+                if pawn[1] == c[0][1]:
+                    eat_action = eat_action + 1
+                    special_child_arr.append(i)
+                    break
+
+            for pawn in curr_state.player1_pawns:
+                if pawn[1] == c[0][1]:
+                    eat_action = eat_action + 1
+                    special_child_arr.append(i)
+                    break
+
+        special_action = small_action + eat_action
+        p = 1 / (2 * special_action + (len(children) - special_action))
+
+        for i, c in enumerate(children):
+            _, val,_bool_dummy = expectimax_d(time_limit, start_time, c[1], agent_id, d-1, c[0])
+            if time.time() - start_time > time_limit - 0.2:
+                return (None, None, True)
+            p_factor = 1
+            if i in special_child_arr:
+                p_factor = 2
+            val = val * p_factor * p
+            if val < cur_min:
+                cur_min = val
+                min_action = c[0]
+            exp_sum = exp_sum + val
+        return (min_action, exp_sum, False)
 
 
 def expectimax(curr_state, agent_id, time_limit):
-    raise NotImplementedError()
+    start_time = time.time()
+    depth = 1
+    current_sol = None
+
+    while True:
+        prev_sol = expectimax_d(time_limit, start_time, curr_state, agent_id, depth)
+        is_time_ended = prev_sol[2]
+        if is_time_ended:
+            break
+        current_sol = prev_sol[0]
+        depth += 1
+
+    return current_sol
+
 
 # these is the BONUS - not mandatory
 def super_agent(curr_state, agent_id, time_limit):
