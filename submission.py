@@ -8,6 +8,8 @@ import time
 
 not_on_board = np.array([-1, -1])
 
+time_safety_delay = 5
+
 
 # agent_id is which player I am, 0 - for the first player , 1 - if second player
 def dumb_heuristic1(state, agent_id):
@@ -64,12 +66,13 @@ def win_lose(state, agent_id):
     if final is not None:
         if int(final) == 0:
             sum_heu = -50
-        if int(final) == int(agent_id)+1:
+        if int(final) == int(agent_id) + 1:
             sum_heu = 1000
-        if int(final) == (1-int(agent_id))+1:
+        if int(final) == (1 - int(agent_id)) + 1:
             sum_heu = -1000
         return sum_heu
     return 0
+
 
 def num_of_two_self_pawns_in_row_col_diag(state, agent_id):
     counter = 0
@@ -152,8 +155,7 @@ def greedy_improved(curr_state, agent_id, time_limit):
 
 
 def rb_heuristic_min_max_d(time_limit, start_time, curr_state, agent_id, d, action=None):
-    print('DDDDDDDDDEPTH:',d, 'TIME:', time.time() - start_time)
-    if time.time() - start_time > time_limit - 0.2:
+    if time.time() - start_time > time_limit - time_safety_delay:
         return (None, None, True)
     elif gge.is_final_state(curr_state) or (d == 0):
         return (action, smart_heuristic(curr_state, agent_id) + d, False)
@@ -164,7 +166,7 @@ def rb_heuristic_min_max_d(time_limit, start_time, curr_state, agent_id, d, acti
         cur_max = float('-inf')
         for c in children:
             v = rb_heuristic_min_max_d(time_limit, start_time, c[1], agent_id, d-1, c[0])
-            if time.time() - start_time > time_limit - 0.2:
+            if time.time() - start_time > time_limit - time_safety_delay:
                 return (None, None, True)
             if v[1] > cur_max:
                 cur_max = v[1]
@@ -175,7 +177,7 @@ def rb_heuristic_min_max_d(time_limit, start_time, curr_state, agent_id, d, acti
         cur_min = float('inf')
         for c in children:
             v = rb_heuristic_min_max_d(time_limit, start_time, c[1], agent_id, d - 1, c[0])
-            if time.time() - start_time > time_limit - 0.2:
+            if time.time() - start_time > time_limit - time_safety_delay:
                 return (None, None, True)
             if v[1] < cur_min:
                 cur_min = v[1]
@@ -199,8 +201,7 @@ def rb_heuristic_min_max(curr_state, agent_id, time_limit):
 
 
 def alpha_beta_d(time_limit, start_time, curr_state, agent_id, d,alpha,beta,action=None):
-    print('DDDDDDDDDEPTH:', d, 'TIME:', time.time() - start_time)
-    if time.time() - start_time > time_limit - 0.2:
+    if time.time() - start_time > time_limit - time_safety_delay:
         return (None, None, True)
     elif gge.is_final_state(curr_state) or (d == 0):
         return (action, smart_heuristic(curr_state, agent_id) + d, False)
@@ -211,7 +212,7 @@ def alpha_beta_d(time_limit, start_time, curr_state, agent_id, d,alpha,beta,acti
         cur_max = float('-inf')
         for c in children:
             v = alpha_beta_d(time_limit, start_time, c[1], agent_id, d-1, alpha, beta, c[0])
-            if time.time() - start_time > time_limit - 0.2:
+            if time.time() - start_time > time_limit - time_safety_delay:
                 return (None, None, True)
             if v[1] > cur_max:
                 cur_max = v[1]
@@ -225,7 +226,7 @@ def alpha_beta_d(time_limit, start_time, curr_state, agent_id, d,alpha,beta,acti
         cur_min = float('inf')
         for c in children:
             v = alpha_beta_d(time_limit, start_time, c[1], agent_id, d-1, alpha, beta, c[0])
-            if time.time() - start_time > time_limit - 0.2:
+            if time.time() - start_time > time_limit - time_safety_delay:
                 return (None, None, True)
             if v[1] < cur_min:
                 cur_min = v[1]
@@ -253,8 +254,7 @@ def alpha_beta(curr_state, agent_id, time_limit):
 
 
 def expectimax_d(time_limit, start_time, curr_state, agent_id, d, action=None):
-    print('DDDDDDDDDEPTH:', d, 'TIME:', time.time() - start_time)
-    if time.time() - start_time > time_limit - 0.2:
+    if time.time() - start_time > time_limit - time_safety_delay:
         return (None, None, True)
     elif gge.is_final_state(curr_state) or (d == 0):
         return (action, smart_heuristic(curr_state, agent_id) + d, False)
@@ -266,7 +266,7 @@ def expectimax_d(time_limit, start_time, curr_state, agent_id, d, action=None):
         cur_max = float('-inf')
         for c in children:
             v = expectimax_d(time_limit, start_time, c[1], agent_id, d-1, c[0])
-            if time.time() - start_time > time_limit - 0.2:
+            if time.time() - start_time > time_limit - time_safety_delay:
                 return (None, None, True)
             if v[1] > cur_max:
                 cur_max = v[1]
@@ -281,7 +281,7 @@ def expectimax_d(time_limit, start_time, curr_state, agent_id, d, action=None):
         cur_min = float('inf')
         special_child_arr = []
         for i, c in enumerate(children):
-            if time.time() - start_time > time_limit - 0.2:
+            if time.time() - start_time > time_limit - time_safety_delay:
                 return (None, None, True)
             if c[0][0] == "S1" or c[0][0] == "S2":
                 small_action = small_action + 1
@@ -304,7 +304,7 @@ def expectimax_d(time_limit, start_time, curr_state, agent_id, d, action=None):
 
         for i, c in enumerate(children):
             _, val,_bool_dummy = expectimax_d(time_limit, start_time, c[1], agent_id, d-1, c[0])
-            if time.time() - start_time > time_limit - 0.2:
+            if time.time() - start_time > time_limit - time_safety_delay:
                 return (None, None, True)
             p_factor = 1
             if i in special_child_arr:
@@ -333,6 +333,7 @@ def expectimax(curr_state, agent_id, time_limit):
     return current_sol
 
 
-# these is the BONUS - not mandatory
+# this is the BONUS - not mandatory
 def super_agent(curr_state, agent_id, time_limit):
-    raise NotImplementedError()
+    return alpha_beta(curr_state, agent_id, time_limit)
+
